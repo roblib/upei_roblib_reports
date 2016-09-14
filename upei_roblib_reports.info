@@ -1,0 +1,8 @@
+name = UPEI Roblib Reports
+description = Creates storage space usage reports
+package = Roblib
+dependencies[] = islandora
+dependencies[] = islandora_solr
+version = 7.x-dev
+core = 7.x
+configure = admin/islandora/tools/roblib/reports

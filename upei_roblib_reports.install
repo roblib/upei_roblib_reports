@@ -1,0 +1,17 @@
+<?php
+
+/**
+ * @file
+ * Installation hooks.
+ */
+
+/**
+ * Implements hook_uninstall().
+ */
+function upei_roblib_reports_uninstall() {
+  variable_del('upei_roblib_reports_drupal_file_size');
+  variable_del('upei_roblib_reports_islandora_size');
+  variable_del('upei_roblib_reports_interval');
+  variable_del('upei_roblib_reports_next_execution');
+  variable_del('upei_roblib_reports_max_storage');
+}

@@ -1,0 +1,131 @@
+<?php
+
+/**
+ * @file
+ * Implementation of robertson library reports module.
+ */
+
+/**
+ * Implements hook_menu().
+ */
+function upei_roblib_reports_menu() {
+
+  $items['admin/islandora/tools/roblib/reports'] = array(
+    'title' => 'Roblib Reports Config',
+    'description' => 'Configuration for UPEI Roblib reports',
+    'access arguments' => array('administer site configuration'),
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('upei_roblib_reports_config_form'),
+    'type' => MENU_NORMAL_ITEM,
+  );
+  $items['admin/reports/upei-roblib-reports'] = array(
+    'title' => 'Islandora Disk Usage Report',
+    'description' => 'Reports on local Drupal disk usage, database size and islandora disk usage',
+    'access arguments' => array('View site reports'),
+    'page callback' => 'upei_roblib_reports_size',
+    'type' => MENU_NORMAL_ITEM,
+  );
+  return $items;
+}
+
+/**
+ * A form for managing the modules configuration.
+ *
+ * @param array $form
+ *   A Drupal form array
+ * @param array $form_state
+ *   A Drupal formstate array
+ *
+ * @return array
+ *   A Drupal form
+ */
+function upei_roblib_reports_config_form($form, &$form_state) {
+  $form['upei_roblib_reports_interval'] = array(
+    '#type' => 'textfield',
+    '#title' => t('A time interval to run the reports.'),
+    '#default_value' => variable_get('upei_roblib_reports_interval', 7),
+    '#description' => t('A number of days, if you enter 7 the reports will be generated every 7 days.  Must be a positive number'),
+    '#required' => TRUE,
+    '#element_validate' => array('element_validate_integer_positive'),
+  );
+  $form['upei_roblib_reports_max_storage'] = array(
+    '#type' => 'textfield',
+    '#title' => t('The maximum amount of storage this site is allowed to use, in GB'),
+    '#default_value' => variable_get('upei_roblib_reports_max_storage', 1000),
+    '#description' => t('The maximum amount of storage including the Drupal file system and the Islandora objects.'),
+    '#required' => TRUE,
+    '#element_validate' => array('element_validate_integer_positive'),
+  );
+  return system_settings_form($form);
+}
+
+/**
+ * Print the report to the screen
+ */
+function upei_roblib_reports_size() {
+  module_load_include('inc', 'upei_roblib_reports', 'includes/utilities');
+  $drupal_sizes = variable_get('upei_roblib_reports_drupal_file_size', array(
+    'public' => 0,
+    'private' => 0
+  ));
+  $islandora_storage = variable_get('upei_roblib_reports_islandora_size', 0);
+  $total_storage = upei_roblib_reports_get_total_storage();
+  $output = array(
+    'upei_roblib_report_output' => array(
+      '#type' => 'markup',
+      '#prefix' => '<div class=upei-roblib-storage-report>',
+      '#suffix' => '</div>',
+      '#items' => array(
+        t('Islandora Disk Usage %size', array('%size' => format_size($islandora_storage))),
+        t('Drupal Public File System Disk Usage %pfs', array('%pfs' => format_size($drupal_sizes['public']))),
+        t('Drupal Private File System Disk Usage %pffs', array('%pffs' => format_size($drupal_sizes['private']))),
+        t('Total Storage Used %tsu', array('%tsu' => format_size($total_storage))),
+      ),
+      '#theme' => 'item_list',
+    ),
+    'upei_roblib_allowed_storage' => array(
+      '#prefix' => '<div class=upei-roblib-storage-report-max-allowed>',
+      '#suffix' => '</div>',
+      '#type' => 'markup',
+      '#markup' => t('Total Allowed Storage is %ts', array('%ts' => variable_get('upei_roblib_reports_max_storage', '500') . ' GB')),
+    ),
+  );
+  drupal_alter('upei_roblib_reports_size', $output);
+  return $output;
+}
+
+/**
+ * Implements hook_mail for module_name.
+ */
+function upei_roblib_reports_mail($key, &$message, $params) {
+  switch ($key) {
+    case 'over_storage':
+      $message['subject'] = $params['subject'];
+      $message['body'][] = $params['body'];
+      break;
+  }
+}
+
+
+/**
+ * Implements hook_cron().
+ */
+function upei_roblib_reports_cron() {
+  module_load_include('inc', 'upei_roblib_reports', 'includes/utilities');
+  $interval = variable_get('upei_roblib_reports_interval', 7) * 60 * 60 * 24;
+  // We usually don't want to act every time cron runs (which could be every
+  // minute) so keep a time for the next run in a variable.
+  if (time() >= variable_get('upei_roblib_reports_next_execution', 0)) {
+    module_load_include('inc', 'upei_roblib_reports', 'includes/batch');
+    upei_roblib_reports_run_unprogressive_batch('upei_roblib_reports_get_batch');
+    variable_set('upei_roblib_reports_drupal_file_size', upei_roblib_reports_get_local_disk_usage());
+    watchdog('upei_roblib_reports', 'Ran Islandora Disk Usage Report', NULL, WATCHDOG_NOTICE);
+    variable_set('upei_roblib_reports_next_execution', time() + $interval);
+  }
+  // this will run with every cron run so it will nag if a site is using too much space
+  // we may want to rethink this.
+  upei_roblib_reports_check_storage_and_notify();
+}
+
+
+
