@@ -115,7 +115,9 @@ function upei_roblib_reports_get_total_storage() {
     'private' => 0
   ));
   $islandora_storage = variable_get('upei_roblib_reports_islandora_size', 0);
-  return $islandora_storage + $drupal_sizes['public'] + $drupal_sizes['private'];
+  $db_storage = variable_get('upei_roblib_reports_db_size', 0);
+  return $islandora_storage + $drupal_sizes['public'] + $drupal_sizes['private'] +
+  $db_storage;
 }
 
 /**
@@ -123,17 +125,21 @@ function upei_roblib_reports_get_total_storage() {
  *
  * Also logs the info in watchdog.
  */
-function upei_roblib_reports_check_storage_and_notify(){
+function upei_roblib_reports_check_storage_and_notify() {
   $total_storage_used = upei_roblib_reports_get_total_storage();
   $max_storage_allowed = variable_get('upei_roblib_reports_max_storage', 1000);
   $max_bytes_allowed = upei_roblib_reports_convert_to_bytes($max_storage_allowed, 'GB');
-  if($total_storage_used > $max_bytes_allowed) {
+  if ($total_storage_used > $max_bytes_allowed) {
     $account = user_load(1);
     $sitename = variable_get('site_name', 'undefined site name');
     // send message to admin user
     $message = t('Site %sitename is over their allowed storage threshold, they are using %total_storage but their threshold is %max_storage',
-      array('%sitename' => $sitename, '%total_storage' => format_size($total_storage_used), '%max_storage' => format_size($max_bytes_allowed)));
-    $params = array (
+      array(
+        '%sitename' => $sitename,
+        '%total_storage' => format_size($total_storage_used),
+        '%max_storage' => format_size($max_bytes_allowed)
+      ));
+    $params = array(
       'subject' => t('%sitename site is over it\'s storage threshold', array('%sitename' => $sitename)),
       'body' => check_markup($message, 'plain_text'),
     );

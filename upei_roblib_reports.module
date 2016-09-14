@@ -69,6 +69,7 @@ function upei_roblib_reports_size() {
     'private' => 0
   ));
   $islandora_storage = variable_get('upei_roblib_reports_islandora_size', 0);
+  $db_storage = variable_get('upei_roblib_reports_db_size', 0);
   $total_storage = upei_roblib_reports_get_total_storage();
   $output = array(
     'upei_roblib_report_output' => array(
@@ -79,9 +80,16 @@ function upei_roblib_reports_size() {
         t('Islandora Disk Usage %size', array('%size' => format_size($islandora_storage))),
         t('Drupal Public File System Disk Usage %pfs', array('%pfs' => format_size($drupal_sizes['public']))),
         t('Drupal Private File System Disk Usage %pffs', array('%pffs' => format_size($drupal_sizes['private']))),
-        t('Total Storage Used %tsu', array('%tsu' => format_size($total_storage))),
+        t('Drupal Database Storage %dds', array('%dds' => format_size($db_storage))),
+        //t('Total Storage Used %tsu', array('%tsu' => format_size($total_storage))),
       ),
       '#theme' => 'item_list',
+    ),
+    'upei_roblib_total_storage_used' => array(
+      '#prefix' => '<div class=upei-roblib-storage-report-total-used>',
+      '#suffix' => '</div>',
+      '#type' => 'markup',
+      '#markup' => t('Total Storage Used %tsu', array('%tsu' => format_size($total_storage))),
     ),
     'upei_roblib_allowed_storage' => array(
       '#prefix' => '<div class=upei-roblib-storage-report-max-allowed>',
@@ -117,8 +125,10 @@ function upei_roblib_reports_cron() {
   // minute) so keep a time for the next run in a variable.
   if (time() >= variable_get('upei_roblib_reports_next_execution', 0)) {
     module_load_include('inc', 'upei_roblib_reports', 'includes/batch');
+    module_load_include('inc', 'upei_roblib_reports', 'includes/db');
     upei_roblib_reports_run_unprogressive_batch('upei_roblib_reports_get_batch');
     variable_set('upei_roblib_reports_drupal_file_size', upei_roblib_reports_get_local_disk_usage());
+    variable_set('upei_roblib_reports_db_size', upei_roblib_reports_get_db_size());
     watchdog('upei_roblib_reports', 'Ran Islandora Disk Usage Report', NULL, WATCHDOG_NOTICE);
     variable_set('upei_roblib_reports_next_execution', time() + $interval);
   }
