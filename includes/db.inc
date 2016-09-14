@@ -1,11 +1,17 @@
 <?php
 /**
- * Created by IntelliJ IDEA.
- * User: ppound
- * Date: 2016-09-14
- * Time: 3:27 PM
+ * @file
+ * database calls
  */
 
+/**
+ * Queries for the total size of the database.
+ *
+ * May only work on mysql with innodb
+ *
+ * @return int
+ *   The size used by the database in bytes.
+ */
 function upei_roblib_reports_get_db_size(){
   global $databases;
   $result = 0;
