@@ -89,8 +89,6 @@ function upei_roblib_reports_batch_operation($jump, $cutoff, &$context) {
     return;
   }
 
-  // Add/update each result in the custom table.
-  module_load_include('inc', 'islandora_xmlsitemap', 'includes/utilities');
   foreach ($results['response']['objects'] as $result) {
     $sandbox['size'] += upei_roblib_reports_get_object_size($result['PID']);
     $sandbox['last_pid'] = $result['PID'];

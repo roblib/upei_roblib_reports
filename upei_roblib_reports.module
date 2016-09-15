@@ -95,7 +95,7 @@ function upei_roblib_reports_size() {
       '#prefix' => '<div class=upei-roblib-storage-report-max-allowed>',
       '#suffix' => '</div>',
       '#type' => 'markup',
-      '#markup' => t('Total Allowed Storage is %ts', array('%ts' => variable_get('upei_roblib_reports_max_storage', '500') . ' GB')),
+      '#markup' => t('Total Allowed Storage is %ts', array('%ts' => variable_get('upei_roblib_reports_max_storage', '1000') . ' GB')),
     ),
   );
   drupal_alter('upei_roblib_reports_size', $output);
@@ -103,7 +103,7 @@ function upei_roblib_reports_size() {
 }
 
 /**
- * Implements hook_mail for module_name.
+ * Implements hook_mail.
  */
 function upei_roblib_reports_mail($key, &$message, $params) {
   switch ($key) {
