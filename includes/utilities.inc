@@ -33,14 +33,12 @@ function upei_roblib_reports_get_local_disk_usage() {
  *   The objects PID
  * @return int
  *   The size in Bytes
- * @throws \Exception
- *   If the object cannot be loaded.
  */
 function upei_roblib_reports_get_object_size($pid) {
   $size = 0;
   $object = islandora_object_load($pid);
   if (!$object) {
-    watchdog('upei_roblib_reports', 'Error loading %object, your solr index may need to be updated', array('%object' => $pid), WATCHDOG_NOTICE);
+    watchdog('upei_roblib_reports', 'Error loading %object', array('%object' => $pid), WATCHDOG_NOTICE);
     return 0;
   }
   $apim = $object->repository->api->m;
