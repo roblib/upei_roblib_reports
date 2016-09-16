@@ -37,6 +37,7 @@ function drush_upei_roblib_reports_run() {
     '@memory-peak' => format_size(memory_get_peak_usage(TRUE)),
   );
   timer_stop('upei-roblib-reports');
+  variable_set('upei_roblib_reports_last_execution', time());
   drush_print(dt('UPEI Roblib Report generated in @timer. Peak memory usage: @memory-peak.', $vars));
 }
 
