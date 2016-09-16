@@ -2,9 +2,8 @@
 
 /**
  * @file
- * Drush integration functions for the xmlsitemap module.
+ * Drush integration functions for the upei_roblbi_reports module.
  *
- * @ingroup xmlsitemap
  */
 
 /**
