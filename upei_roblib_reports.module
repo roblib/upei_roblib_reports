@@ -71,19 +71,23 @@ function upei_roblib_reports_size() {
   $islandora_storage = variable_get('upei_roblib_reports_islandora_size', 0);
   $db_storage = variable_get('upei_roblib_reports_db_size', 0);
   $total_storage = upei_roblib_reports_get_total_storage();
+  $rows = array(
+    array(t('Files in Islandora (Fedora)'), format_size($islandora_storage)),
+    array(t('Files Uploaded To Drupal (Public)'), format_size($drupal_sizes['public'])),
+    array(t('Files Uploaded To Drupal (Private)'), format_size($drupal_sizes['private'])),
+    array(t('Drupal Content (Database)'), format_size($db_storage)),
+    //t('Total Storage Used %tsu', array('%tsu' => format_size($total_storage))),
+  );
+  $report_timestamp = variable_get('upei_roblib_reports_last_execution', NULL);
+  $report_timestamp = $report_timestamp ? 'Reports last ran: ' . format_date($report_timestamp) : t('Reports have not yet run.');
+  
   $output = array(
     'upei_roblib_report_output' => array(
-      '#type' => 'markup',
+      '#header' => array(t('Storage Type'), t('Storage Size')),
+      '#rows' => $rows,
+      '#theme' => 'table',
       '#prefix' => '<div class=upei-roblib-storage-report>',
       '#suffix' => '</div>',
-      '#items' => array(
-        t('Islandora Disk Usage %size', array('%size' => format_size($islandora_storage))),
-        t('Drupal Public File System Disk Usage %pfs', array('%pfs' => format_size($drupal_sizes['public']))),
-        t('Drupal Private File System Disk Usage %pffs', array('%pffs' => format_size($drupal_sizes['private']))),
-        t('Drupal Database Storage %dds', array('%dds' => format_size($db_storage))),
-        //t('Total Storage Used %tsu', array('%tsu' => format_size($total_storage))),
-      ),
-      '#theme' => 'item_list',
     ),
     'upei_roblib_total_storage_used' => array(
       '#prefix' => '<div class=upei-roblib-storage-report-total-used>',
@@ -96,6 +100,12 @@ function upei_roblib_reports_size() {
       '#suffix' => '</div>',
       '#type' => 'markup',
       '#markup' => t('Total Allowed Storage is %ts', array('%ts' => variable_get('upei_roblib_reports_max_storage', '1000') . ' GB')),
+    ),
+    'report_timestamp' => array(
+      '#prefix' => '<div class=upei-roblib-storage-report-timestamp>',
+      '#suffix' => '</div>',
+      '#type' => 'markup',
+      '#markup' => $report_timestamp,
     ),
   );
   drupal_alter('upei_roblib_reports_size', $output);
@@ -123,6 +133,7 @@ function upei_roblib_reports_cron() {
   $interval = variable_get('upei_roblib_reports_interval', 7) * 60 * 60 * 24;
   // We usually don't want to act every time cron runs (which could be every
   // minute) so keep a time for the next run in a variable.
+  // Also keep the time this was run, to display with the report.
   if (time() >= variable_get('upei_roblib_reports_next_execution', 0)) {
     module_load_include('inc', 'upei_roblib_reports', 'includes/batch');
     module_load_include('inc', 'upei_roblib_reports', 'includes/db');
@@ -131,9 +142,9 @@ function upei_roblib_reports_cron() {
     variable_set('upei_roblib_reports_db_size', upei_roblib_reports_get_db_size());
     watchdog('upei_roblib_reports', 'Ran Islandora Disk Usage Report', NULL, WATCHDOG_NOTICE);
     variable_set('upei_roblib_reports_next_execution', time() + $interval);
+    variable_set('upei_roblib_reports_last_execution', time());
   }
-  // this will run with every cron run so it will nag if a site is using too much space
-  // we may want to rethink this.
+
   upei_roblib_reports_check_storage_and_notify();
 }
 
