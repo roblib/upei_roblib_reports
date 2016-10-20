@@ -5,6 +5,43 @@
  */
 
 /**
+ * Load an islandora object as a specific user (defaults to global user).
+ *
+ * When running via cron we may need to switch users so we
+ * can include objects that may be locked down via XACML.
+ *
+ * @param string $object_id
+ *   An islandora objects id.
+ * @return \AbstractObject|bool|mixed|null
+ */
+function upei_roblib_reports_object_load($object_id, $account = NULL) {
+  global $user;
+  if ($account == NULL){
+    $account = $user;
+  }
+  $tuque = islandora_get_tuque_connection($account, NULL);
+
+  if ($tuque) {
+    try {
+      return $tuque->repository->getObject(urldecode($object_id));
+    }
+    catch (Exception $e) {
+      if ($e->getCode() == '404') {
+        return FALSE;
+      }
+      else {
+        return NULL;
+      }
+    }
+  }
+  else {
+    IslandoraTuque::getError();
+  }
+  // Assuming access denied in all other cases for now.
+  return NULL;
+}
+
+/**
  * Returns the disk usage for both the private and public files directory.
  * TODO test on large file system to see how this behaves.
  *
@@ -34,9 +71,9 @@ function upei_roblib_reports_get_local_disk_usage() {
  * @return int
  *   The size in Bytes
  */
-function upei_roblib_reports_get_object_size($pid) {
+function upei_roblib_reports_get_object_size($pid, $account = NULL) {
   $size = 0;
-  $object = islandora_object_load($pid);
+  $object = upei_roblib_reports_object_load($pid, $account);
   if (!$object) {
     watchdog('upei_roblib_reports', 'Error loading %object', array('%object' => $pid), WATCHDOG_NOTICE);
     return 0;

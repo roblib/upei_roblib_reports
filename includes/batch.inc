@@ -17,13 +17,13 @@
  * @return array
  *   An array representing the batch.
  */
-function upei_roblib_reports_get_batch($jump = 100, $cutoff = -1) {
+function upei_roblib_reports_get_batch($jump = 100, $cutoff = -1, $account = NULL) {
   $path = drupal_get_path('module', 'upei_roblib_reports');
 
   $batch = array(
     'progress_message' => t('Time elapsed: @elapsed <br/>Estimated time remaining @estimate.'),
     'operations' => array(
-      array('upei_roblib_reports_batch_operation', array($jump, $cutoff)),
+      array('upei_roblib_reports_batch_operation', array($jump, $cutoff, $account)),
     ),
     'file' => "$path/includes/batch.inc",
   );
@@ -41,7 +41,7 @@ function upei_roblib_reports_get_batch($jump = 100, $cutoff = -1) {
  * @param int $cutoff
  *   The number of records to process per batch.
  */
-function upei_roblib_reports_batch_operation($jump, $cutoff, &$context) {
+function upei_roblib_reports_batch_operation($jump, $cutoff, $account, &$context) {
   $sandbox =& $context['sandbox'];
 
   if (!isset($sandbox['offset'])) {
@@ -88,9 +88,11 @@ function upei_roblib_reports_batch_operation($jump, $cutoff, &$context) {
     variable_set('upei_roblib_reports_last_pid', $sandbox['last_pid']);
     return;
   }
-
+  if(empty($sandbox['size'])) {
+    $sandbox['size'] = 0;
+  }
   foreach ($results['response']['objects'] as $result) {
-    $sandbox['size'] += upei_roblib_reports_get_object_size($result['PID']);
+    $sandbox['size'] += upei_roblib_reports_get_object_size($result['PID'], $account);
     $sandbox['last_pid'] = $result['PID'];
   }
   $qp->resetResults();

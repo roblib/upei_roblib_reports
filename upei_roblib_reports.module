@@ -129,6 +129,8 @@ function upei_roblib_reports_mail($key, &$message, $params) {
  * Implements hook_cron().
  */
 function upei_roblib_reports_cron() {
+  // Load user 1 who hopefully has access to all objects so we get accurate results on islandora objects with XACML.
+  $account = user_load(1);
   module_load_include('inc', 'upei_roblib_reports', 'includes/utilities');
   $interval = variable_get('upei_roblib_reports_interval', 7) * 60 * 60 * 24;
   // We usually don't want to act every time cron runs (which could be every
@@ -137,7 +139,7 @@ function upei_roblib_reports_cron() {
   if (time() >= variable_get('upei_roblib_reports_next_execution', 0)) {
     module_load_include('inc', 'upei_roblib_reports', 'includes/batch');
     module_load_include('inc', 'upei_roblib_reports', 'includes/db');
-    upei_roblib_reports_run_unprogressive_batch('upei_roblib_reports_get_batch');
+    upei_roblib_reports_run_unprogressive_batch('upei_roblib_reports_get_batch', 100, -1, $account);
     variable_set('upei_roblib_reports_drupal_file_size', upei_roblib_reports_get_local_disk_usage());
     variable_set('upei_roblib_reports_db_size', upei_roblib_reports_get_db_size());
     watchdog('upei_roblib_reports', 'Ran Islandora Disk Usage Report', NULL, WATCHDOG_NOTICE);
