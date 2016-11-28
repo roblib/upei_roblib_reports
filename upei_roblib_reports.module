@@ -21,7 +21,7 @@ function upei_roblib_reports_menu() {
   $items['admin/reports/upei-roblib-reports'] = array(
     'title' => 'Islandora Disk Usage Report',
     'description' => 'Reports on local Drupal disk usage, database size and islandora disk usage',
-    'access arguments' => array('View site reports'),
+    'access arguments' => array('access site reports'),
     'page callback' => 'upei_roblib_reports_size',
     'type' => MENU_NORMAL_ITEM,
   );
