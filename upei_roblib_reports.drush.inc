@@ -25,6 +25,10 @@ function drush_upei_roblib_reports_run() {
   module_load_include('inc', 'upei_roblib_reports', 'includes/batch');
   module_load_include('inc', 'upei_roblib_reports', 'includes/utilities');
   module_load_include('inc', 'upei_roblib_reports', 'includes/db');
+  // Save time to DB in case anything fails we have a last time run.
+  // try and prevent multiple cron runs the very first time this is run on
+  // large Islandora sites.
+  variable_set('upei_roblib_reports_last_execution', time());
   timer_start('upei-roblib-reports');
   // Run the batch process.
   upei_roblib_reports_run_unprogressive_batch('upei_roblib_reports_get_batch');

@@ -84,6 +84,7 @@ function upei_roblib_reports_get_object_size($pid, $account = NULL) {
     foreach ($ds_history as $hist) {
       $size += $hist['dsSize'];
     }
+    unset($datastream);
   }
   unset($object);
   return $size;

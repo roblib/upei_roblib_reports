@@ -127,7 +127,7 @@ function upei_roblib_reports_run_unprogressive_batch() {
   }
 
   // Attempt to increase the execution time.
-  drupal_set_time_limit(240);
+  drupal_set_time_limit(0);
 
   // Build the batch array.
   $batch = call_user_func_array($batch_callback, $args);
