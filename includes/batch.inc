@@ -91,10 +91,19 @@ function upei_roblib_reports_batch_operation($jump, $cutoff, $account, &$context
   if(empty($sandbox['size'])) {
     $sandbox['size'] = 0;
   }
+  $num_processed = 0;
   foreach ($results['response']['objects'] as $result) {
     $sandbox['size'] += upei_roblib_reports_get_object_size($result['PID'], $account);
     $sandbox['last_pid'] = $result['PID'];
+    // TODO look into this further
+    // On some sites using HAProxy we get a database went away error. So set the
+    // variable every 3000 iterations so underlying connection doesn't go stale.
+    if ($num_processed % 3000 == 0) {
+      variable_set('upei_roblib_reports_last_pid', $sandbox['last_pid']);
+      variable_set('upei_roblib_reports_islandora_size', $sandbox['size']);
+    }
   }
+
   $qp->resetResults();
 
   $context['message'] = t('Processed @count of @total.', array(
